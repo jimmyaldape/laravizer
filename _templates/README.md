@@ -131,7 +131,8 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **{AUTHOR_NAME}** - [{AUTHOR_WEBSITE}]({AUTHOR_WEBSITE})
+* **{AUTHOR_NAME}** - [{AUTHOR_EMAIL}]({AUTHOR_WEBSITE})
+
 
 ## License
 

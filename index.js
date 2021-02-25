@@ -107,27 +107,33 @@ async function init() {
     mysql_password = answer.mysql_password;
 }
 
-
 function scaffoldNewApplication(){
-    console.log(chalk.blue.bold(`Scaffolding Laravel project ...`));
-    let command = 'curl';
-    let parameters = [
-        ['-s', `https://laravel.build/${project_name}`, '|', 'bash']
-    ];
+    console.log(chalk.blue.bold(`Scaffolding your new Laravel project ...`));
+    console.log(chalk.blue.bold(`Please be patient, may take a bit ...`));
+
+    let command = '/bin/sh';
+    let parameters = [];
+    parameters.push(['-c', `curl -s https://laravel.build/${project_name} | bash`]);
 
     // scaffold new application
     const project = spawn(command, ...parameters);
+
+    project.stdout.on('data', (data) => {
+        console.log(`${data}`);
+    });
     // once finished copy and clean files
     project.on("exit", result => {
         moveNewApplication();
     });
 }
+
 function moveNewApplication(){
     console.log(chalk.blue.bold(`Moving the ${project_name} project into a new git directory ...`));
     fsx.move(`${project_name}`, `../${project_name}`)
         .then( () => { copyTemplateFiles(); })
         .catch( err => { console.log(err); });
 }
+
 function copyTemplateFiles() {
     console.log(chalk.blue.bold("Copying template files ..."));
 
@@ -142,13 +148,38 @@ function copyTemplateFiles() {
             });
         });
 
-        updateRootEnv();
+        updateLaravelEnv();
     });
 }
 
-function updateRootEnv(){
-    console.log(chalk.blue.bold("Updating root project environment files ..."));
-    let projectEnv = updatePlaceholders(
+function updateLaravelEnv(){
+    console.log(chalk.blue.bold(`Updating Laravel environment files ...`));
+    updatePlaceholders(
+        [
+            /Laravel/g,
+            `APP_URL=http://${project_name}.test`,
+            /DB_HOST=127.0.0.1/g,
+            `DB_DATABASE=${project_name}`,
+            /root/g,
+            /DB_PASSWORD=/g,
+        ],
+        [
+            project_name,
+            `APP_URL=http://${project_name}.test:${http_port}`,
+            'DB_HOST=mysql',
+            `DB_DATABASE=${mysql_database}`,
+            mysql_username,
+            `DB_PASSWORD=${mysql_password}`,
+        ],
+        [
+        `../${project_name}/.env`,
+            ]
+    ).then(()=>{ gitInit(); });
+}
+
+function updateRootFiles(){
+    console.log(chalk.blue.bold("Updating project files ..."));
+    updatePlaceholders(
         [
             /{PROJECT_NAME}/g,
             /{PROJECT_DESCRIPTION}/g,
@@ -164,41 +195,26 @@ function updateRootEnv(){
             author_name,
             author_email,
             author_website,
-            http_port,
-            mysql_port,
-            mysql_password,
-            mysql_username,
-            mysql_database
         ],
-        `../${project_name}/README.md`,
-        `../${project_name}/LICENSE`,
-    );
-    projectEnv.then(() => { updateLaravelEnv(); });
+        [
+            `../${project_name}/README.md`,
+            `../${project_name}/LICENSE`,
+        ]
+    ).then(() => { gitInit(); });
 }
 
-function updateLaravelEnv(){
-    console.log(chalk.blue.bold(`Updating ${project_type} environment files ...`));
-    let laravelEnv = updatePlaceholders(
-        [
-            /Laravel/g,
-            `APP_URL=http://${project_name}.test`,
-            /DB_HOST=127.0.0.1/g,
-            `DB_DATABASE=${project_name}`,
-            /root/g,
-            /DB_PASSWORD=/g,
-        ],
-        [
-            project_name,
-            `APP_URL=http://localhost:${http_port}`,
-            'DB_HOST=mysql',
-            `DB_DATABASE=${mysql_database}`,
-            mysql_username,
-            `DB_PASSWORD=${mysql_password}`,
-        ],
-        `../${project_name}/.env`,
-
-    );
-    laravelEnv.then(()=>{ gitInit(); });
+async function updatePlaceholders(words, replacements, files ){
+    let changedFiles = '';
+    try {
+        changedFiles = replace.sync({
+            files: files,
+            from: words,
+            to: replacements
+        });
+        console.log(`Modified files:`, {changedFiles});
+    } catch (error) {
+        console.error('Error occurred: ', error);
+    }
 }
 
 function gitInit(){
@@ -206,32 +222,14 @@ function gitInit(){
     const git = spawn("git", ["init", `../${project_name}`]);
     git.on("exit", code => {
         console.log(boxen(chalk.white.bold(`Project is ready for development. Please type 'cd  ../${project_name}' to get started.`), {
-            padding: 2,
-            margin: 2,
+            padding: 1,
+            margin: 1,
             borderStyle: "round",
             borderColor: "blue",
         }));
     });
-
-}
-async function updatePlaceholders(words, replacements,...files ){
-
-    try{
-        words.forEach((word, i) => {
-            let changedFiles = replace.sync({
-                files: files,
-                from: word,
-                to: replacements[i]
-            });
-            // console.log(`Modified files - ${i}:`, changedFiles.join(', '));
-        });
-
-    } catch (error) {
-        console.error('Error occurred: ', error);
-    }
-
 }
 
 init().then(()=> {
-    scaffoldNewApplication()
-})
+    scaffoldNewApplication();
+});
