@@ -1,0 +1,38 @@
+{
+  "name": "laravizer",
+  "version": "0.1.0",
+  "description": "Scaffolds a new Laravel project and prepares the directory for source control.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jimmyaldape/laravizer.git"
+  },
+  "keywords": [
+    "laravel",
+    "composer",
+    "base"
+  ],
+  "author": "Jimmy <jimmy@jimmyaldape.com> (https://jimmyaldape.dev)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jimmyaldape/laravizer/issues"
+  },
+  "homepage": "https://github.com/jimmyaldape/laravizer#readme",
+  "dependencies": {
+    "boxen": "^4.2.0",
+    "chalk": "^4.1.0",
+    "dotenv": "^8.2.0",
+    "fs-extra": "^9.0.1",
+    "prompts": "^2.3.2",
+    "replace-in-file": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=12.10.0",
+    "npm": ">=6.0.0"
+  },
+  "private": true
+}
